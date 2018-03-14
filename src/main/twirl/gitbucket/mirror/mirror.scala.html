@@ -1,5 +1,5 @@
-@(mirror: io.github.gitbucket.mirror.model.Mirror,
-  statusOption: Option[io.github.gitbucket.mirror.model.MirrorStatus],
+@(mirror: io.github.gitbucket.mirroring.model.Mirror,
+  statusOption: Option[io.github.gitbucket.mirroring.model.MirrorStatus],
   repository: gitbucket.core.service.RepositoryService.RepositoryInfo
 )(implicit context: gitbucket.core.controller.Context)
 
@@ -57,7 +57,7 @@
           class="btn btn-success"
           data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>Updating">
           <i class="fa fa-refresh"></i>
-          Update Now
+          Sync Now
         </button>
 
       </div>

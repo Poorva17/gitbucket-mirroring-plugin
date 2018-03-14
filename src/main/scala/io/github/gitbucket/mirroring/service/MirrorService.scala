@@ -1,13 +1,13 @@
-package io.github.gitbucket.mirror.service
+package io.github.gitbucket.mirroring.service
 
 import java.io.File
 import java.net.URI
 import java.util.Date
 
-import io.github.gitbucket.mirror.model.Profile.{MirrorStatuses, Mirrors}
-import io.github.gitbucket.mirror.model.{Mirror, MirrorStatus}
-import io.github.gitbucket.mirror.util.git._
-import io.github.gitbucket.mirror.util.git.transport._
+import io.github.gitbucket.mirroring.model.Profile.{MirrorStatuses, Mirrors}
+import io.github.gitbucket.mirroring.model.{Mirror, MirrorStatus}
+import io.github.gitbucket.mirroring.util.git._
+import io.github.gitbucket.mirroring.util.git.transport._
 import gitbucket.core.model.Profile.profile.api._
 import gitbucket.core.servlet.Database
 import gitbucket.core.util.Directory

@@ -1,10 +1,10 @@
-package io.github.gitbucket.mirror.controller
+package io.github.gitbucket.mirroring.controller
 
 import gitbucket.core.controller.ControllerBase
 import gitbucket.core.service.{AccountService, RepositoryService}
 import gitbucket.core.util.OwnerAuthenticator
-import io.github.gitbucket.mirror.model.Mirror
-import io.github.gitbucket.mirror.service.MirrorService
+import io.github.gitbucket.mirroring.model.Mirror
+import io.github.gitbucket.mirroring.service.MirrorService
 import org.scalatra.{Ok, _}
 
 import scala.concurrent.Await

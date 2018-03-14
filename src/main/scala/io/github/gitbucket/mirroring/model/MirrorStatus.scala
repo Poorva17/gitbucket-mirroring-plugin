@@ -1,6 +1,6 @@
-package io.github.gitbucket.mirror.model
+package io.github.gitbucket.mirroring.model
 
-import io.github.gitbucket.mirror.model.Profile._
+import io.github.gitbucket.mirroring.model.Profile._
 
 import java.util.Date
 

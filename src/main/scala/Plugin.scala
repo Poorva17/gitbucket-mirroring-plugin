@@ -1,8 +1,8 @@
 import gitbucket.core.controller.Context
-import gitbucket.core.plugin.{Link, ReceiveHook, RepositoryHook}
+import gitbucket.core.plugin.{Link, ReceiveHook}
 import gitbucket.core.service.RepositoryService.RepositoryInfo
-import io.github.gitbucket.mirror.controller.{MirrorApiController, MirrorController}
-import io.github.gitbucket.mirror.hook.{MirrorPostReceiveHook, MirrorRepositoryHook}
+import io.github.gitbucket.mirroring.controller.{MirrorApiController, MirrorController}
+import io.github.gitbucket.mirroring.hook.MirrorPostReceiveHook
 import io.github.gitbucket.solidbase.migration.LiquibaseMigration
 import io.github.gitbucket.solidbase.model.Version
 
@@ -28,5 +28,4 @@ class Plugin extends gitbucket.core.plugin.Plugin {
   )
 
   override val receiveHooks: Seq[ReceiveHook] = Seq(new MirrorPostReceiveHook())
-//  override val repositoryHooks: Seq[RepositoryHook] = Seq(new MirrorRepositoryHook())
 }

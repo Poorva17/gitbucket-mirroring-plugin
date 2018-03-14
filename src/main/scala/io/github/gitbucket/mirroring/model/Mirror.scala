@@ -1,4 +1,4 @@
-package io.github.gitbucket.mirror.model
+package io.github.gitbucket.mirroring.model
 
 trait MirrorComponent { self: gitbucket.core.model.Profile =>
   import profile.api._

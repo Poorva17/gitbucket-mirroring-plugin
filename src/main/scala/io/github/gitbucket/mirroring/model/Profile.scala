@@ -1,4 +1,4 @@
-package io.github.gitbucket.mirror.model
+package io.github.gitbucket.mirroring.model
 
 import gitbucket.core.model._
 

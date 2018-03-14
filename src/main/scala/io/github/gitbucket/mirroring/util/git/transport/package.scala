@@ -1,4 +1,4 @@
-package io.github.gitbucket.mirror.util.git
+package io.github.gitbucket.mirroring.util.git
 
 import java.net.URI
 

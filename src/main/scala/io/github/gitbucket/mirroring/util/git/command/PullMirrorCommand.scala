@@ -1,4 +1,4 @@
-package io.github.gitbucket.mirror.util.git.command
+package io.github.gitbucket.mirroring.util.git.command
 
 import org.eclipse.jgit.api.{Git, TransportCommand}
 import org.eclipse.jgit.lib.{Constants, Repository}
@@ -6,13 +6,13 @@ import org.eclipse.jgit.transport.RefSpec
 
 import scala.collection.JavaConverters._
 
-class PushMirrorCommand(repo: Repository) extends TransportCommand[PushMirrorCommand, Unit](repo) {
+class PullMirrorCommand(repo: Repository) extends TransportCommand[PullMirrorCommand, Unit](repo) {
 
   private var remote: String = Constants.DEFAULT_REMOTE_NAME
 
   def getRemote: String = remote
 
-  def setRemote(remote: String): PushMirrorCommand = {
+  def setRemote(remote: String): PullMirrorCommand = {
     this.remote = remote
     this
   }
@@ -37,14 +37,14 @@ class PushMirrorCommand(repo: Repository) extends TransportCommand[PushMirrorCom
       .withFilter { ref => repo.findRef(ref.getName) == null }
       .map { ref => new RefSpec(s":${ref.getName}") }
 
-    val pushCommand = git.push()
+    val pullCommand = git.fetch()
       .setRemote(remote)
       .setRefSpecs(((mirrorRefSpec :: Nil) ++ deletedRefSpecs).asJava)
-      .setForce(true)
 
-    configure(pushCommand)
 
-    pushCommand.call()
+    configure(pullCommand)
+
+    pullCommand.call()
   }
 
 }

@@ -1,8 +1,8 @@
-package io.github.gitbucket.mirror.hook
+package io.github.gitbucket.mirroring.hook
 
 import gitbucket.core.model.Profile
 import gitbucket.core.plugin.ReceiveHook
-import io.github.gitbucket.mirror.service.MirrorService
+import io.github.gitbucket.mirroring.service.MirrorService
 import org.eclipse.jgit.transport.{ReceiveCommand, ReceivePack}
 import org.slf4j.LoggerFactory
 
