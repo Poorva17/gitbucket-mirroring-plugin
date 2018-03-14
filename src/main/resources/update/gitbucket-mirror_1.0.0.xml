@@ -7,7 +7,7 @@
     <createTable tableName="MIRROR">
         <column name="ID" type="int" nullable="false" autoIncrement="true" unique="true"/>
         <column name="USER_NAME" type="varchar(100)" nullable="false"/>
-        <column name="REPOSITORY_NAME" type="varchar(100)" nullable="false"/>
+        <column name="REPOSITORY_NAME" type="varchar(100)" nullable="false" unique="true"/>
         <column name="NAME" type="varchar(100)" nullable="false"/>
         <column name="REMOTE_URL" type="varchar(2000)" nullable="false"/>
         <column name="ENABLED" type="boolean" nullable="false"/>

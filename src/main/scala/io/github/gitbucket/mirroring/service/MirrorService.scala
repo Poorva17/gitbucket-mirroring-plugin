@@ -47,11 +47,11 @@ trait MirrorService {
     }
   }
 
-  def findMirrorByRepository(owner: String, repositoryName: String): Future[Seq[Mirror]] = {
+  def findMirrorByRepository(owner: String, repositoryName: String): Future[Mirror] = {
     db.run {
       Mirrors
         .filter { mirror => mirror.userName === owner.bind && mirror.repositoryName === repositoryName.bind }
-        .result
+        .result.head
     }
   }
 
