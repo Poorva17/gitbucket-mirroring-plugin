@@ -41,10 +41,7 @@ class PullMirrorCommand(repo: Repository) extends TransportCommand[PullMirrorCom
       .setRemote(remote)
       .setRefSpecs(((mirrorRefSpec :: Nil) ++ deletedRefSpecs).asJava)
 
-
     configure(pullCommand)
-
-    pullCommand.call()
   }
 
 }
