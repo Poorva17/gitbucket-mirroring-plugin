@@ -17,35 +17,27 @@ class MirrorController extends ControllerBase
 
   private val logger = LoggerFactory.getLogger(classOf[MirrorController])
 
-  get("/:owner/:repository/mirrors")(ownerOnly { repository =>
+  get("/:owner/:repository/mirror")(ownerOnly { repository =>
 
     val mirrorsWithUpdate = Await.result(
       findMirrorByRepositoryWithStatus(repository.owner, repository.name),
-      60 seconds
+      60.seconds
     )
-
-    gitbucket.mirror.html.list(mirrorsWithUpdate, repository)
+    gitbucket.mirror.html.list(Seq(mirrorsWithUpdate), repository)
 
   })
 
-  get("/:owner/:repository/mirrors/new")(ownerOnly { repository =>
-
+  get("/:owner/:repository/mirror/new")(ownerOnly { repository =>
     gitbucket.mirror.html.create(repository)
-
   })
 
-  get("/:owner/:repository/mirrors/:id/edit")(ownerOnly { repository =>
-
-    val option = for {
-      mirrorId <- params.getAs[Int]("id")
-      mirror <- Await.result(getMirror(mirrorId), 60 seconds)
-    } yield (mirror, Await.result(getMirrorUpdate(mirrorId), 60 seconds))
-
-    option
-      .map { case (mirror, updateOption) =>
-        gitbucket.mirror.html.mirror(mirror, updateOption, repository)
-      }
-      .getOrElse(NotFound())
-
+  get("/:owner/:repository/mirror/edit")(ownerOnly { repository =>
+    (for {
+      owner <- params.getAs[String]("owner")
+      repositoryName <- params.getAs[String]("repository")
+    } yield {
+        val (mirror, maybeStatus) = Await.result(findMirrorByRepositoryWithStatus(owner, repositoryName), 60.seconds)
+        gitbucket.mirror.html.mirror(mirror, maybeStatus, repository)
+      }).getOrElse(NotFound())
   })
 }

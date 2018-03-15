@@ -2,8 +2,8 @@
 
 @import gitbucket.core.view.helpers
 
-@gitbucket.core.html.main(s"Mirrors - ${repository.owner}/${repository.name}"){
-  @gitbucket.core.html.menu("mirrors", repository){
+@gitbucket.core.html.main(s"Mirror - ${repository.owner}/${repository.name}"){
+  @gitbucket.core.html.menu("mirror", repository){
 
     <script src="@context.path/plugin-assets/mirror/alert-message.js"></script>
 
@@ -37,19 +37,19 @@ $(function(){
     };
 
     $.ajax({
-      url: '@context.path/api/v3/repos/@repository.owner/@repository.name/mirrors',
+      url: '@context.path/api/v3/repos/@repository.owner/@repository.name/mirror',
       type: 'POST',
       contentType: 'application/json; charset=utf-8',
       data: JSON.stringify(mirror),
       dataType: 'json',
       success: function() {
 
-        location.href = `@helpers.url(repository)/mirrors`;
+        location.href = `@helpers.url(repository)/mirror`;
       },
       error: function() {
 
         setAlertMessage('An error occurred while creating new mirror', 'danger');
-        location.href = `@helpers.url(repository)/mirrors`;
+        location.href = `@helpers.url(repository)/mirror`;
       }
     });
 

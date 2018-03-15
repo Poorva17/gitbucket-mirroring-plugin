@@ -3,8 +3,8 @@
 
 @import gitbucket.core.view.helpers
 
-@gitbucket.core.html.main(s"Mirrors - ${repository.owner}/${repository.name}") {
-  @gitbucket.core.html.menu("mirrors", repository) {
+@gitbucket.core.html.main(s"Mirror - ${repository.owner}/${repository.name}") {
+  @gitbucket.core.html.menu("mirror", repository) {
 
     <script src="@context.path/plugin-assets/mirror/alert-message.js"></script>
     <link rel="stylesheet" type="text/css" href="@context.path/plugin-assets/mirror/style.css">
@@ -13,7 +13,7 @@
 
     @if(true) {
       <div class="pull-right" style="margin-bottom: 10px;">
-        <a href="@helpers.url(repository)/mirrors/new" class="btn btn-success">New mirror</a>
+        <a href="@helpers.url(repository)/mirror/new" class="btn btn-success">New mirror</a>
       </div>
     }
 
@@ -28,7 +28,7 @@
           <tr>
             <td style="padding-top: 15px; padding-bottom: 15px;">
               <div class="col-md-6 text-left">
-                <a href="@helpers.url(repository)/mirrors/@mirror.id/edit">@mirror.name</a>
+                <a href="@helpers.url(repository)/mirror/edit">@mirror.name</a>
               </div>
               <div class="col-md-3 text-center">
                 <p>

@@ -24,7 +24,7 @@ class Plugin extends gitbucket.core.plugin.Plugin {
   )
 
   override val repositoryMenus = Seq(
-    (repository: RepositoryInfo, context: Context) => Some(Link("mirrors", "Mirrors", "/mirrors", Some("mirror")))
+    (repository: RepositoryInfo, context: Context) => Some(Link("mirror", "Mirror", "/mirror", Some("mirror")))
   )
 
   override val receiveHooks: Seq[ReceiveHook] = Seq(new MirrorPostReceiveHook())

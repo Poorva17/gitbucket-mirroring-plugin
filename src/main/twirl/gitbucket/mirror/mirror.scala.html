@@ -5,8 +5,8 @@
 
 @import gitbucket.core.view.helpers
 
-@gitbucket.core.html.main(s"Mirrors - ${repository.owner}/${repository.name}"){
-  @gitbucket.core.html.menu("mirrors", repository){
+@gitbucket.core.html.main(s"Mirror - ${repository.owner}/${repository.name}"){
+  @gitbucket.core.html.menu("mirror", repository){
 
     <script src="@context.path/plugin-assets/mirror/alert-message.js"></script>
 
@@ -72,16 +72,16 @@ $(function(){
 
   $('#delete-mirror').click(function(){
     $.ajax({
-      url: '@context.path/api/v3/repos/@repository.owner/@repository.name/mirrors/@mirror.id',
+      url: '@context.path/api/v3/repos/@repository.owner/@repository.name/mirror',
       type: 'DELETE',
       success: function(data, status){
-        location.href = '@helpers.url(repository)/mirrors';
+        location.href = '@helpers.url(repository)/mirror';
       },
       error: function(request, status, error) {
 
         console.log(error)
         setAlertMessage('An error happened while deleting the mirror.', 'danger');
-        location.href = '@helpers.url(repository)/mirrors';
+        location.href = '@helpers.url(repository)/mirror';
 
       }
     });
@@ -102,7 +102,7 @@ $(function(){
     };
 
     $.ajax({
-      url: '@context.path/api/v3/repos/@repository.owner/@repository.name/mirrors/@mirror.id',
+      url: '@context.path/api/v3/repos/@repository.owner/@repository.name/mirror',
       type: 'PUT',
       contentType: 'application/json; charset=utf-8',
       data: JSON.stringify(mirror),
@@ -110,13 +110,13 @@ $(function(){
       success: function(data, status){
 
         setAlertMessage('Mirror settings have been updated.', 'info');
-        location.href = '@helpers.url(repository)/mirrors/@mirror.id/edit';
+        location.href = '@helpers.url(repository)/mirror/edit';
 
       },
       error: function(request, status, error) {
 
         setAlertMessage('An error happened while updating the mirror.', 'danger');
-        location.href = '@helpers.url(repository)/mirrors/@mirror.id/edit';
+        location.href = '@helpers.url(repository)/mirror/edit';
 
       }
     });
@@ -129,15 +129,15 @@ $(function(){
     $(this).button('loading');
 
     $.ajax({
-      url: '@context.path/api/v3/repos/@repository.owner/@repository.name/mirrors/@mirror.id/status',
+      url: '@context.path/api/v3/repos/@repository.owner/@repository.name/mirror/status',
       type: 'PUT',
       contentType: 'application/json; charset=utf-8',
       success: function(data, status){
-        location.href = '@helpers.url(repository)/mirrors/@mirror.id/edit';
+        location.href = '@helpers.url(repository)/mirror/edit';
       },
       error: function(request, status, error) {
         setAlertMessage('An error happened while executing mirror update.', 'danger');
-        location.href = '@helpers.url(repository)/mirrors/@mirror.id/edit';
+        location.href = '@helpers.url(repository)/mirror/edit';
       }
     });
   });

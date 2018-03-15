@@ -17,63 +17,39 @@ class MirrorApiController extends ControllerBase
   with OwnerAuthenticator
   with RepositoryService {
 
-  delete("/api/v3/repos/:owner/:repository/mirrors/:id") (ownerOnly { _ =>
-
-    val deleted = params.getAs[Int]("id").exists { mirrorId =>
-      Await.result(deleteMirror(mirrorId), 60 seconds)
-    }
-
-    if (deleted) NoContent() else NotFound()
-
+  delete("/api/v3/repos/:owner/:repository/mirror") (ownerOnly { _ =>
+    (for {
+      owner <- params.getAs[String]("owner")
+      repository <- params.getAs[String]("repository")
+      if Await.result(deleteMirrorByRepository(owner, repository), 60.seconds)
+    } yield {
+      NoContent()
+    }).getOrElse(NotFound())
   })
 
-  get("/api/v3/repos/:owner/:repository/mirrors") (ownerOnly { repository =>
-
-    Await.result(findMirrorByRepository(repository.owner, repository.name), 60 seconds)
+  get("/api/v3/repos/:owner/:repository/mirror") (ownerOnly { repository =>
+    Await.result(findMirrorByRepository(repository.owner, repository.name), 60.seconds)
   })
 
-  get("/api/v3/repos/:owner/:repository/mirrors/:id") (ownerOnly { repository =>
-
-    params.getAs[Int]("id")
-      .flatMap(mirrorId => Await.result(getMirror(mirrorId), 60 seconds))
-      .map { mirror => Ok(mirror) }
-      .getOrElse(NotFound())
-  })
-
-  post("/api/v3/repos/:owner/:repository/mirrors") (ownerOnly { repository =>
-
+  post("/api/v3/repos/:owner/:repository/mirror") (ownerOnly { repository =>
     Try(parsedBody.extract[Mirror])
       .map { body =>
-
-        val mirror = Await.result(insertMirror(body), 60 seconds)
-        val location = s"${context.path}/api/v3/${repository.owner}/${repository.name}/mirrors/${mirror.id.get}"
-
+        val mirror = Await.result(insertMirror(body), 60.seconds)
+        val location = s"${context.path}/api/v3/${repository.owner}/${repository.name}/mirror"
         Created(mirror, Map("location" -> location))
       }
       .getOrElse(BadRequest())
 
   })
 
-  put("/api/v3/repos/:owner/:repository/mirrors/:id") (ownerOnly { repository =>
-
+  put("/api/v3/repos/:owner/:repository/mirror") (ownerOnly { repository =>
     val result = for {
-      mirrorId <- params.getAs[Int]("id").toRight(NotFound())
+      owner <- params.getAs[String]("owner").toRight(NotFound())
+      repository <- params.getAs[String]("repository").toRight(NotFound())
       body <- Try(parsedBody.extract[Mirror]).fold[Either[ActionResult, Mirror]](_ => Left(BadRequest()), Right(_))
-      mirror <- Await.result(updateMirror(body.copy(id = Some(mirrorId))), 60 seconds).toRight(NotFound())
+      mirror <- Await.result(updateMirror(body.copy(userName = owner, repositoryName = repository)), 60.seconds).toRight(NotFound())
     } yield Ok(mirror)
 
     result.merge
-  })
-
-  put("/api/v3/repos/:owner/:repository/mirrors/:id/status") (ownerOnly { repository =>
-
-    val status = for {
-      mirrorId <- params.getAs[Int]("id")
-      mirror <- Await.result(getMirror(mirrorId), 60 seconds)
-    } yield Await.result(executeMirrorUpdate(mirror), 60 seconds)
-
-    status
-      .map(Ok(_))
-      .getOrElse(NotFound())
   })
 }

@@ -17,7 +17,8 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.duration.DurationLong
+import scala.concurrent.{Await, Future}
 import scala.util.Try
 
 trait MirrorService {
@@ -26,24 +27,13 @@ trait MirrorService {
 
   private val db = Database()
 
-  def deleteMirror(mirrorId: Int): Future[Boolean] = {
-    db.run {
-      Mirrors
-        .filter {
-          _.id === mirrorId.bind
-        }
-        .delete
-        .transactionally
-        .map(_ > 0)
-    }
-  }
-
-  def deleteMirrorByRepository(owner: String, repositoryName: String): Future[Int] = {
+  def deleteMirrorByRepository(owner: String, repositoryName: String): Future[Boolean] = {
     db.run {
       Mirrors
         .filter { mirror => mirror.userName === owner.bind && mirror.repositoryName === repositoryName.bind }
         .delete
         .transactionally
+        .map(_ > 0)
     }
   }
 
@@ -55,34 +45,12 @@ trait MirrorService {
     }
   }
 
-  def findMirrorByRepositoryWithStatus(owner: String, repositoryName: String): Future[Seq[(Mirror, Option[MirrorStatus])]] = {
+  def findMirrorByRepositoryWithStatus(owner: String, repositoryName: String): Future[(Mirror, Option[MirrorStatus])] = {
     db.run {
       Mirrors
         .filter { mirror => mirror.userName === owner.bind && mirror.repositoryName === repositoryName.bind }
         .joinLeft(MirrorStatuses).on(_.id === _.mirrorId)
-        .result
-    }
-  }
-
-  def getMirror(mirrorId: Int): Future[Option[Mirror]] = {
-    db.run {
-      Mirrors
-        .filter {
-          _.id === mirrorId.bind
-        }
-        .result
-        .headOption
-    }
-  }
-
-  def getMirrorUpdate(mirrorId: Int): Future[Option[MirrorStatus]] = {
-    db.run {
-      MirrorStatuses
-        .filter {
-          _.mirrorId === mirrorId.bind
-        }
-        .result
-        .headOption
+        .result.head
     }
   }
 
@@ -99,15 +67,17 @@ trait MirrorService {
     }
   }
 
-  def updateMirror(mirror: Mirror): Future[Option[Mirror]] = {
+  def updateMirror(newMirror: Mirror): Future[Option[Mirror]] = {
+    val dd = Await.result(findMirrorByRepository(newMirror.userName, newMirror.repositoryName), 5.seconds)
     db.run {
+      val mirror2 = newMirror.copy(id = dd.id)
       Mirrors
-        .filter {
-          _.id === mirror.id.bind
+        .filter { mirror =>
+          mirror.userName === newMirror.userName.bind && mirror.repositoryName === newMirror.repositoryName.bind
         }
-        .update(mirror)
+        .update(mirror2)
         .transactionally
-        .map { rowNumber => if (rowNumber == 0) None else Some(mirror) }
+        .map { rowNumber => if (rowNumber == 0) None else Some(mirror2) }
     }
   }
 
