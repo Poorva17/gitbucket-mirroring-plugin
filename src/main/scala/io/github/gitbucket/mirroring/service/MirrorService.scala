@@ -4,13 +4,11 @@ import java.io.File
 import java.net.URI
 import java.util.Date
 
-import io.github.gitbucket.mirroring.model.Profile.{MirrorStatuses, Mirrors}
-import io.github.gitbucket.mirroring.model.{Mirror, MirrorStatus}
-import io.github.gitbucket.mirroring.util.git._
-import io.github.gitbucket.mirroring.util.git.transport._
 import gitbucket.core.model.Profile.profile.api._
 import gitbucket.core.servlet.Database
 import gitbucket.core.util.Directory
+import io.github.gitbucket.mirroring.model.Profile.{MirrorStatuses, Mirrors}
+import io.github.gitbucket.mirroring.model.{Mirror, MirrorStatus, Profile}
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
@@ -27,30 +25,25 @@ trait MirrorService {
 
   private val db = Database()
 
+  def selectBy(owner: String, repositoryName: String): Query[Profile.Mirrors, Mirror, Seq] = {
+    Mirrors.filter { mirror => mirror.userName === owner.bind && mirror.repositoryName === repositoryName.bind }
+  }
+
   def deleteMirrorByRepository(owner: String, repositoryName: String): Future[Boolean] = {
     db.run {
-      Mirrors
-        .filter { mirror => mirror.userName === owner.bind && mirror.repositoryName === repositoryName.bind }
-        .delete
-        .transactionally
-        .map(_ > 0)
+      selectBy(owner, repositoryName).delete.transactionally.map(_ > 0)
     }
   }
 
-  def findMirrorByRepository(owner: String, repositoryName: String): Future[Mirror] = {
+  def findMirrorByRepository(owner: String, repositoryName: String): Future[Option[Mirror]] = {
     db.run {
-      Mirrors
-        .filter { mirror => mirror.userName === owner.bind && mirror.repositoryName === repositoryName.bind }
-        .result.head
+      selectBy(owner, repositoryName).result.headOption
     }
   }
 
-  def findMirrorByRepositoryWithStatus(owner: String, repositoryName: String): Future[(Mirror, Option[MirrorStatus])] = {
+  def findMirrorByRepositoryWithStatus(owner: String, repositoryName: String): Future[Option[(Mirror, Option[MirrorStatus])]] = {
     db.run {
-      Mirrors
-        .filter { mirror => mirror.userName === owner.bind && mirror.repositoryName === repositoryName.bind }
-        .joinLeft(MirrorStatuses).on(_.id === _.mirrorId)
-        .result.head
+      selectBy(owner, repositoryName).joinLeft(MirrorStatuses).on(_.id === _.mirrorId).result.headOption
     }
   }
 
@@ -68,26 +61,13 @@ trait MirrorService {
   }
 
   def updateMirror(newMirror: Mirror): Future[Option[Mirror]] = {
-    val dd = Await.result(findMirrorByRepository(newMirror.userName, newMirror.repositoryName), 5.seconds)
+    val maybeId = Await.result(findMirrorByRepository(newMirror.userName, newMirror.repositoryName), 5.seconds).flatMap(_.id)
+    val mirrorWithId = newMirror.copy(id = maybeId)
     db.run {
-      val mirror2 = newMirror.copy(id = dd.id)
-      Mirrors
-        .filter { mirror =>
-          mirror.userName === newMirror.userName.bind && mirror.repositoryName === newMirror.repositoryName.bind
-        }
-        .update(mirror2)
+      selectBy(newMirror.userName, newMirror.repositoryName)
+        .update(mirrorWithId)
         .transactionally
-        .map { rowNumber => if (rowNumber == 0) None else Some(mirror2) }
-    }
-  }
-
-  def renameMirrorRepository(owner: String, repositoryName: String, newRepositoryName: String): Future[Int] = {
-    db.run {
-      Mirrors
-        .filter { mirror => mirror.userName === owner.bind && mirror.repositoryName === repositoryName.bind }
-        .map { mirror => mirror.repositoryName }
-        .update(newRepositoryName)
-        .transactionally
+        .map { rowNumber => if (rowNumber == 0) None else Some(mirrorWithId) }
     }
   }
 
@@ -114,11 +94,9 @@ trait MirrorService {
     // Execute the push, get the result and convert it to a mirror status.
 
     val result = for {
-      repository <- repository(mirror.userName, mirror.repositoryName)
+      repository <- localRepository(mirror.userName, mirror.repositoryName)
       remoteUrl <- Try(URI.create(mirror.remoteUrl))
-      pullMirrorCommand <- new Git(repository).pullMirror()
-        .setRemote(remoteUrl.toString)
-        .configureTransport(remoteUrl)
+      pullMirrorCommand = new PullMirrorCommand(new Git(repository).getRepository).setRemote(remoteUrl.toString)
       _ <- Try { pullMirrorCommand.call() }
     } yield ()
 
@@ -129,7 +107,7 @@ trait MirrorService {
     insertOrUpdateMirrorUpdate(status)
   }
 
-  private def repository(owner: String, repositoryName: String): Try[Repository] = Try {
+  private def localRepository(owner: String, repositoryName: String): Try[Repository] = Try {
 
     val repositoryPath = s"${Directory.GitBucketHome}/repositories/$owner/$repositoryName.git"
 
@@ -139,5 +117,6 @@ trait MirrorService {
       .findGitDir()
       .build()
   }
+
 
 }

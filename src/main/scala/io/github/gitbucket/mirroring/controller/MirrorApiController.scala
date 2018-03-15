@@ -28,7 +28,7 @@ class MirrorApiController extends ControllerBase
   })
 
   get("/api/v3/repos/:owner/:repository/mirror") (ownerOnly { repository =>
-    Await.result(findMirrorByRepository(repository.owner, repository.name), 60.seconds)
+    Await.result(findMirrorByRepository(repository.owner, repository.name), 60.seconds).getOrElse(NotFound())
   })
 
   post("/api/v3/repos/:owner/:repository/mirror") (ownerOnly { repository =>
@@ -45,11 +45,25 @@ class MirrorApiController extends ControllerBase
   put("/api/v3/repos/:owner/:repository/mirror") (ownerOnly { repository =>
     val result = for {
       owner <- params.getAs[String]("owner").toRight(NotFound())
-      repository <- params.getAs[String]("repository").toRight(NotFound())
+      repositoryName <- params.getAs[String]("repository").toRight(NotFound())
       body <- Try(parsedBody.extract[Mirror]).fold[Either[ActionResult, Mirror]](_ => Left(BadRequest()), Right(_))
-      mirror <- Await.result(updateMirror(body.copy(userName = owner, repositoryName = repository)), 60.seconds).toRight(NotFound())
+      mirror <- Await.result(updateMirror(body.copy(userName = owner, repositoryName = repositoryName)), 60.seconds).toRight(NotFound())
     } yield Ok(mirror)
 
     result.merge
   })
+
+  put("/api/v3/repos/:owner/:repository/mirror/status") (ownerOnly { repository =>
+    val status = for {
+      owner <- params.getAs[String]("owner")
+      repositoryName <- params.getAs[String]("repository")
+      mirror <- Await.result(findMirrorByRepository(owner, repositoryName), 60.seconds)
+
+    } yield Await.result(executeMirrorUpdate(mirror), 60.seconds)
+
+    status
+      .map(Ok(_))
+      .getOrElse(NotFound())
+  })
+
 }

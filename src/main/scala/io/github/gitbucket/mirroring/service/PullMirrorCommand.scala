@@ -1,4 +1,4 @@
-package io.github.gitbucket.mirroring.util.git.command
+package io.github.gitbucket.mirroring.service
 
 import org.eclipse.jgit.api.{Git, TransportCommand}
 import org.eclipse.jgit.lib.{Constants, Repository}

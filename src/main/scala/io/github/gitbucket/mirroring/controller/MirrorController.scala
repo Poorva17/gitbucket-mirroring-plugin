@@ -23,7 +23,7 @@ class MirrorController extends ControllerBase
       findMirrorByRepositoryWithStatus(repository.owner, repository.name),
       60.seconds
     )
-    gitbucket.mirror.html.list(Seq(mirrorsWithUpdate), repository)
+    gitbucket.mirror.html.list(mirrorsWithUpdate.toList, repository)
 
   })
 
@@ -35,8 +35,8 @@ class MirrorController extends ControllerBase
     (for {
       owner <- params.getAs[String]("owner")
       repositoryName <- params.getAs[String]("repository")
+      (mirror, maybeStatus) <- Await.result(findMirrorByRepositoryWithStatus(owner, repositoryName), 60.seconds)
     } yield {
-        val (mirror, maybeStatus) = Await.result(findMirrorByRepositoryWithStatus(owner, repositoryName), 60.seconds)
         gitbucket.mirror.html.mirror(mirror, maybeStatus, repository)
       }).getOrElse(NotFound())
   })
