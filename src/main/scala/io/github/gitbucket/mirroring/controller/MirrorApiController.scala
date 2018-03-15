@@ -4,7 +4,7 @@ import gitbucket.core.controller.ControllerBase
 import gitbucket.core.service.{AccountService, RepositoryService}
 import gitbucket.core.util.OwnerAuthenticator
 import io.github.gitbucket.mirroring.model.Mirror
-import io.github.gitbucket.mirroring.service.MirrorService
+import io.github.gitbucket.mirroring.service.{GitService, MirrorService}
 import org.scalatra.{Ok, _}
 
 import scala.concurrent.Await
@@ -14,6 +14,7 @@ import scala.util.Try
 class MirrorApiController extends ControllerBase
   with AccountService
   with MirrorService
+  with GitService
   with OwnerAuthenticator
   with RepositoryService {
 
@@ -58,8 +59,8 @@ class MirrorApiController extends ControllerBase
       owner <- params.getAs[String]("owner")
       repositoryName <- params.getAs[String]("repository")
       mirror <- Await.result(findMirrorByRepository(owner, repositoryName), 60.seconds)
-
-    } yield Await.result(executeMirrorUpdate(mirror), 60.seconds)
+      mirrorStatus = sync(mirror)
+    } yield Await.result(insertOrUpdateMirrorUpdate(mirrorStatus), 60.seconds)
 
     status
       .map(Ok(_))

@@ -1,28 +1,15 @@
 package io.github.gitbucket.mirroring.service
 
-import java.io.File
-import java.net.URI
-import java.util.Date
-
 import gitbucket.core.model.Profile.profile.api._
 import gitbucket.core.servlet.Database
-import gitbucket.core.util.Directory
 import io.github.gitbucket.mirroring.model.Profile.{MirrorStatuses, Mirrors}
 import io.github.gitbucket.mirroring.model.{Mirror, MirrorStatus, Profile}
-import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.lib.Repository
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder
-import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.DurationLong
 import scala.concurrent.{Await, Future}
-import scala.util.Try
 
 trait MirrorService {
-
-  private val logger = LoggerFactory.getLogger(classOf[MirrorService])
-
   private val db = Database()
 
   def selectBy(owner: String, repositoryName: String): Query[Profile.Mirrors, Mirror, Seq] = {
@@ -70,64 +57,4 @@ trait MirrorService {
         .map { rowNumber => if (rowNumber == 0) None else Some(mirrorWithId) }
     }
   }
-
-  def executeMirrorUpdate(mirror: Mirror): Future[MirrorStatus] = {
-
-    def onFailure(throwable: Throwable): MirrorStatus = {
-
-      val repositoryName = s"${mirror.userName}/${mirror.repositoryName}"
-      val message = s"Error while executing mirror status for repository $repositoryName: ${throwable.getMessage}"
-
-      logger.error(message, throwable)
-
-      MirrorStatus(mirror.id.get, new Date(System.currentTimeMillis()), successful = false, Some(throwable.getMessage))
-    }
-
-    def onSuccess(): MirrorStatus = {
-      logger.info(
-        s"Mirror status has been successfully executed for repository ${mirror.userName}/${mirror.repositoryName}."
-      )
-
-      MirrorStatus(mirror.id.get, new Date(System.currentTimeMillis()), successful = true, None)
-    }
-
-    // Execute the pull, get the result and convert it to a mirror status.
-
-    val result = for {
-      repository <- localRepository(mirror.userName, mirror.repositoryName)
-      remoteUrl <- Try(URI.create(mirror.remoteUrl))
-      pullMirrorCommand = new PullMirrorCommand(new Git(repository).getRepository).setRemote(remoteUrl.toString)
-      _ <- Try { pullMirrorCommand.call() }
-    } yield ()
-
-    val status = result.fold(onFailure, _ => onSuccess())
-
-    // Save the status.
-
-    insertOrUpdateMirrorUpdate(status)
-  }
-
-  private def localRepository(owner: String, repositoryName: String): Try[Repository] = Try {
-
-    val repositoryPath = s"${Directory.GitBucketHome}/repositories/$owner/$repositoryName.git"
-
-    new FileRepositoryBuilder()
-      .setGitDir(new File(repositoryPath))
-      .readEnvironment()
-      .findGitDir()
-      .build()
-  }
-
-
-  def mirrorize(mirror: Mirror) = {
-    Await.result(insertMirror(mirror), 60.seconds)
-    val result = for {
-      repository <- localRepository(mirror.userName, mirror.repositoryName)
-      remoteUrl <- Try(URI.create(mirror.remoteUrl))
-      _ <- Try {
-        val git = new Git(repository)
-      }
-    } yield ()
-  }
-
 }
