@@ -91,7 +91,7 @@ trait MirrorService {
       MirrorStatus(mirror.id.get, new Date(System.currentTimeMillis()), successful = true, None)
     }
 
-    // Execute the push, get the result and convert it to a mirror status.
+    // Execute the pull, get the result and convert it to a mirror status.
 
     val result = for {
       repository <- localRepository(mirror.userName, mirror.repositoryName)
@@ -118,5 +118,16 @@ trait MirrorService {
       .build()
   }
 
+
+  def mirrorize(mirror: Mirror) = {
+    Await.result(insertMirror(mirror), 60.seconds)
+    val result = for {
+      repository <- localRepository(mirror.userName, mirror.repositoryName)
+      remoteUrl <- Try(URI.create(mirror.remoteUrl))
+      _ <- Try {
+        val git = new Git(repository)
+      }
+    } yield ()
+  }
 
 }
