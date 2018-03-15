@@ -13,10 +13,8 @@ import org.eclipse.jgit.transport.{FetchResult, RefSpec}
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
-import scala.concurrent.Future
-import scala.util.control.NonFatal
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
+import scala.util.control.NonFatal
 
 trait GitService {
 
