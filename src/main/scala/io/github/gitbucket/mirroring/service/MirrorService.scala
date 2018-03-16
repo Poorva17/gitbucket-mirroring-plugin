@@ -1,5 +1,6 @@
 package io.github.gitbucket.mirroring.service
 
+import gitbucket.core.service.RepositoryService.RepositoryInfo
 import gitbucket.core.util.Directory
 import io.github.gitbucket.mirroring.model.Mirror
 import org.h2.mvstore.{MVMap, MVStore}
@@ -22,19 +23,12 @@ trait MirrorService {
     }
   }
 
-  def findMirror(owner: String, repositoryName: String): Option[Mirror] = execute { mirrors =>
-    read(mirrors.get(makeKey(owner, repositoryName)))
-  }
+  def findMirror(repo: RepositoryInfo): Option[Mirror]             = execute(mirrors => read(mirrors.get(makeKey(repo))))
+  def deleteMirror(repo: RepositoryInfo): Option[Mirror]           = execute(mirrors => read(mirrors.remove(makeKey(repo))))
+  def upsert(repo: RepositoryInfo, mirror: Mirror): Option[Mirror] = execute(mirrors => read(mirrors.put(makeKey(repo), write(mirror))))
 
-  def deleteMirror(owner: String, repositoryName: String): Option[Mirror] = execute { mirrors =>
-    read(mirrors.remove(makeKey(owner, repositoryName)))
-  }
-
-  def upsert(mirror: Mirror): Option[Mirror] = execute { mirrors =>
-    read(mirrors.put(makeKey(mirror.userName, mirror.repositoryName), Serialization.write(mirror)))
-  }
-
-  private def makeKey(owner: String, repositoryName: String) = s"$owner-$repositoryName"
+  private def makeKey(repo: RepositoryInfo) = s"${repo.owner}-${repo.name}"
 
   private def read(string: String): Option[Mirror] = Option(string).map(Serialization.read[Mirror])
+  private def write(mirror: Mirror): String        = Serialization.write(mirror)
 }

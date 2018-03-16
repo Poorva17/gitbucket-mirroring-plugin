@@ -4,6 +4,7 @@ import java.io.File
 import java.net.URI
 import java.util.Date
 
+import gitbucket.core.service.RepositoryService.RepositoryInfo
 import gitbucket.core.util.Directory
 import io.github.gitbucket.mirroring.model.{Mirror, MirrorStatus}
 import org.eclipse.jgit.api.Git
@@ -16,46 +17,46 @@ import scala.collection.JavaConverters._
 import scala.util.Try
 import scala.util.control.NonFatal
 
-trait GitService {
+class GitService(repoInfo: RepositoryInfo, mirror: Mirror) {
 
-  private val mirrorRefSpec = new RefSpec("+refs/*:refs/*")
-  private val logger        = LoggerFactory.getLogger(classOf[MirrorService])
+  private val mirrorRefSpec  = new RefSpec("+refs/*:refs/*")
+  private val logger         = LoggerFactory.getLogger(classOf[MirrorService])
+  private val repositoryPath = s"${Directory.GitBucketHome}/repositories/${repoInfo.owner}/${repoInfo.name}.git"
 
-  def sync(mirror: Mirror): Mirror = {
-    val mirrorStatus = Try {
-      val repository = localRepository(mirror.userName, mirror.repositoryName)
-      val remoteUrl  = URI.create(mirror.remoteUrl)
-      fetch(new Git(repository), remoteUrl.toString)
-      onSuccess(mirror)
-    }.recover {
-      case NonFatal(ex) => onFailure(mirror, ex)
-    }.get
+  def sync(): Mirror = {
+    val mirrorStatus = try {
+      fetch()
+      successStatus()
+    } catch {
+      case NonFatal(ex) => failureStatus(ex)
+    }
+
     mirror.withStatus(mirrorStatus)
   }
 
-  private def onFailure(mirror: Mirror, throwable: Throwable): MirrorStatus = {
-    val repositoryName = s"${mirror.userName}/${mirror.repositoryName}"
-    val message        = s"Error while executing mirror status for repository $repositoryName: ${throwable.getMessage}"
-    logger.error(message, throwable)
-    MirrorStatus(new Date(System.currentTimeMillis()), successful = false, Some(throwable.getMessage))
+  private def fetch(): FetchResult = {
+    val remoteUrl    = URI.create(mirror.remoteUrl)
+    val fetchCommand = git().fetch().setRemote(remoteUrl.toString).setRefSpecs(mirrorRefSpec)
+    fetchCommand.call()
   }
 
-  private def onSuccess(mirror: Mirror): MirrorStatus = {
-    logger.info(s"Mirror status has been successfully executed for repository ${mirror.userName}/${mirror.repositoryName}.")
-    MirrorStatus(new Date(System.currentTimeMillis()), successful = true, None)
-  }
-
-  private def fetch(git: Git, remote: String): FetchResult = {
-    git.fetch().setRemote(remote).setRefSpecs(Seq(mirrorRefSpec).asJava).call()
-  }
-
-  private def localRepository(owner: String, repositoryName: String): Repository = {
-    val repositoryPath = s"${Directory.GitBucketHome}/repositories/$owner/$repositoryName.git"
-
+  private def git(): Git = new Git(
     new FileRepositoryBuilder()
       .setGitDir(new File(repositoryPath))
       .readEnvironment()
       .findGitDir()
       .build()
+  )
+
+  private def successStatus(): MirrorStatus = {
+    logger.info(s"Mirror status has been successfully executed for repository ${repoInfo.owner}/${repoInfo.name}.")
+    MirrorStatus(new Date(System.currentTimeMillis()), successful = true, None)
+  }
+
+  private def failureStatus(throwable: Throwable): MirrorStatus = {
+    val repositoryName = s"${repoInfo.owner}/${repoInfo.name}"
+    val message        = s"Error while executing mirror status for repository $repositoryName: ${throwable.getMessage}"
+    logger.error(message, throwable)
+    MirrorStatus(new Date(System.currentTimeMillis()), successful = false, Some(throwable.getMessage))
   }
 }

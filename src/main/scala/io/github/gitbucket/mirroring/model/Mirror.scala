@@ -3,8 +3,6 @@ package io.github.gitbucket.mirroring.model
 import java.util.Date
 
 final case class Mirror(
-    userName: String,
-    repositoryName: String,
     name: String,
     remoteUrl: String,
     enabled: Boolean,

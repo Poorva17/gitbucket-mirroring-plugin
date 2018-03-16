@@ -9,71 +9,49 @@ import org.scalatra._
 
 import scala.util.Try
 
-class MirrorApiController
-    extends ControllerBase
-    with AccountService
-    with MirrorService
-    with GitService
-    with OwnerAuthenticator
-    with RepositoryService {
+class MirrorApiController extends ControllerBase with AccountService with MirrorService with OwnerAuthenticator with RepositoryService {
 
   delete("/api/v3/repos/:owner/:repository/mirror") {
-    ownerOnly { _ =>
-      (for {
-        owner      <- params.getAs[String]("owner")
-        repository <- params.getAs[String]("repository")
-        _          <- deleteMirror(owner, repository)
-      } yield {
-        NoContent()
-      }).getOrElse(NotFound())
-    }
+    ownerOnly(repo => deleteMirror(repo).getOrElse(NotFound()))
   }
 
   get("/api/v3/repos/:owner/:repository/mirror") {
-    ownerOnly { repository =>
-      findMirror(repository.owner, repository.name).getOrElse(NotFound())
-    }
+    ownerOnly(repo => findMirror(repo).getOrElse(NotFound()))
   }
 
   post("/api/v3/repos/:owner/:repository/mirror") {
-    ownerOnly { repository =>
-      Try(parsedBody.extract[Mirror])
-        .map { mirror =>
-          upsert(mirror)
-          val location = s"${context.path}/api/v3/${repository.owner}/${repository.name}/mirror"
-          Created(mirror, Map("location" -> location))
-        }
-        .getOrElse(BadRequest())
-
+    ownerOnly { repo =>
+      Try {
+        val mirror = parsedBody.extract[Mirror]
+        upsert(repo, mirror)
+        val location = s"${context.path}/api/v3/${repo.owner}/${repo.name}/mirror"
+        Created(mirror, Map("location" -> location))
+      }.getOrElse(BadRequest())
     }
   }
 
   put("/api/v3/repos/:owner/:repository/mirror") {
-    ownerOnly { _ =>
-      val result = for {
-        owner          <- params.getAs[String]("owner").toRight(NotFound())
-        repositoryName <- params.getAs[String]("repository").toRight(NotFound())
-        mirror         <- Try(parsedBody.extract[Mirror]).fold[Either[ActionResult, Mirror]](_ => Left(BadRequest()), Right(_))
-        _              <- upsert(mirror).toRight(NotFound())
-      } yield Ok(mirror)
-
-      result.merge
+    ownerOnly { repo =>
+      Try {
+        val mirror = parsedBody.extract[Mirror]
+        upsert(repo, mirror)
+        Ok(mirror)
+      }.getOrElse(NotFound())
     }
   }
 
   put("/api/v3/repos/:owner/:repository/mirror/status") {
-    ownerOnly { repository =>
-      (for {
-        owner          <- params.getAs[String]("owner")
-        repositoryName <- params.getAs[String]("repository")
-        mirror         <- findMirror(owner, repositoryName)
-        mirrorWithStatus = sync(mirror)
-        _      <- upsert(mirrorWithStatus)
+    ownerOnly { repo =>
+      val maybeResult = for {
+        mirror <- findMirror(repo)
+        mirrorWithStatus = new GitService(repo, mirror).sync()
+        _      <- upsert(repo, mirrorWithStatus)
         status <- mirrorWithStatus.status
       } yield {
         Ok(status)
-      }).getOrElse(NotFound())
+      }
+
+      maybeResult.getOrElse(NotFound())
     }
   }
-
 }
