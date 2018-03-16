@@ -9,21 +9,25 @@ import org.scalatra._
 
 import scala.util.Try
 
-class MirrorApiController extends ControllerBase with AccountService with MirrorService with OwnerAuthenticator with RepositoryService {
+class MirrorApiController(mirrorService: MirrorService)
+    extends ControllerBase
+    with AccountService
+    with OwnerAuthenticator
+    with RepositoryService {
 
   delete("/api/v3/repos/:owner/:repository/mirror") {
-    ownerOnly(repo => deleteMirror(repo).getOrElse(NotFound()))
+    ownerOnly(repo => mirrorService.deleteMirror(repo).getOrElse(NotFound()))
   }
 
   get("/api/v3/repos/:owner/:repository/mirror") {
-    ownerOnly(repo => findMirror(repo).getOrElse(NotFound()))
+    ownerOnly(repo => mirrorService.findMirror(repo).getOrElse(NotFound()))
   }
 
   post("/api/v3/repos/:owner/:repository/mirror") {
     ownerOnly { repo =>
       Try {
         val mirror = parsedBody.extract[Mirror]
-        upsert(repo, mirror)
+        mirrorService.upsert(repo, mirror)
         val location = s"${context.path}/api/v3/${repo.owner}/${repo.name}/mirror"
         Created(mirror, Map("location" -> location))
       }.getOrElse(BadRequest())
@@ -34,7 +38,7 @@ class MirrorApiController extends ControllerBase with AccountService with Mirror
     ownerOnly { repo =>
       Try {
         val mirror = parsedBody.extract[Mirror]
-        upsert(repo, mirror)
+        mirrorService.upsert(repo, mirror)
         Ok(mirror)
       }.getOrElse(NotFound())
     }
@@ -43,9 +47,9 @@ class MirrorApiController extends ControllerBase with AccountService with Mirror
   put("/api/v3/repos/:owner/:repository/mirror/status") {
     ownerOnly { repo =>
       val maybeResult = for {
-        mirror <- findMirror(repo)
+        mirror <- mirrorService.findMirror(repo)
         mirrorWithStatus = new GitService(repo, mirror).sync()
-        _      <- upsert(repo, mirrorWithStatus)
+        _      <- mirrorService.upsert(repo, mirrorWithStatus)
         status <- mirrorWithStatus.status
       } yield {
         Ok(status)

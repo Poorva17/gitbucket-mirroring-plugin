@@ -5,10 +5,14 @@ import gitbucket.core.service.{AccountService, RepositoryService}
 import gitbucket.core.util.OwnerAuthenticator
 import io.github.gitbucket.mirroring.service.MirrorService
 
-class MirrorController extends ControllerBase with AccountService with MirrorService with OwnerAuthenticator with RepositoryService {
+class MirrorController(mirrorService: MirrorService)
+    extends ControllerBase
+    with AccountService
+    with OwnerAuthenticator
+    with RepositoryService {
 
   get("/:owner/:repository/mirror") {
-    ownerOnly(repo => gitbucket.mirror.html.list(findMirror(repo).toList, repo))
+    ownerOnly(repo => gitbucket.mirror.html.list(mirrorService.findMirror(repo).toList, repo))
   }
 
   get("/:owner/:repository/mirror/new") {
@@ -16,6 +20,6 @@ class MirrorController extends ControllerBase with AccountService with MirrorSer
   }
 
   get("/:owner/:repository/mirror/edit") {
-    ownerOnly(repo => findMirror(repo).map(mirror => gitbucket.mirror.html.mirror(mirror, repo)).getOrElse(NotFound()))
+    ownerOnly(repo => mirrorService.findMirror(repo).map(mirror => gitbucket.mirror.html.mirror(mirror, repo)).getOrElse(NotFound()))
   }
 }
