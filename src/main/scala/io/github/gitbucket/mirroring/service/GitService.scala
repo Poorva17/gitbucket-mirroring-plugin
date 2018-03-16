@@ -19,27 +19,30 @@ import scala.util.control.NonFatal
 trait GitService {
 
   private val mirrorRefSpec = new RefSpec("+refs/*:refs/*")
-  private val logger = LoggerFactory.getLogger(classOf[MirrorService])
+  private val logger        = LoggerFactory.getLogger(classOf[MirrorService])
 
-  def sync(mirror: Mirror): MirrorStatus = Try {
-    val repository = localRepository(mirror.userName, mirror.repositoryName)
-    val remoteUrl = URI.create(mirror.remoteUrl)
-    fetch(new Git(repository), remoteUrl.toString)
-    onSuccess(mirror)
-  }.recover {
-    case NonFatal(ex) => onFailure(mirror, ex)
-  }.get
+  def sync(mirror: Mirror): Mirror = {
+    val mirrorStatus = Try {
+      val repository = localRepository(mirror.userName, mirror.repositoryName)
+      val remoteUrl  = URI.create(mirror.remoteUrl)
+      fetch(new Git(repository), remoteUrl.toString)
+      onSuccess(mirror)
+    }.recover {
+      case NonFatal(ex) => onFailure(mirror, ex)
+    }.get
+    mirror.withStatus(mirrorStatus)
+  }
 
   private def onFailure(mirror: Mirror, throwable: Throwable): MirrorStatus = {
     val repositoryName = s"${mirror.userName}/${mirror.repositoryName}"
-    val message = s"Error while executing mirror status for repository $repositoryName: ${throwable.getMessage}"
+    val message        = s"Error while executing mirror status for repository $repositoryName: ${throwable.getMessage}"
     logger.error(message, throwable)
-    MirrorStatus(mirror.id.get, new Date(System.currentTimeMillis()), successful = false, Some(throwable.getMessage))
+    MirrorStatus(new Date(System.currentTimeMillis()), successful = false, Some(throwable.getMessage))
   }
 
   private def onSuccess(mirror: Mirror): MirrorStatus = {
     logger.info(s"Mirror status has been successfully executed for repository ${mirror.userName}/${mirror.repositoryName}.")
-    MirrorStatus(mirror.id.get, new Date(System.currentTimeMillis()), successful = true, None)
+    MirrorStatus(new Date(System.currentTimeMillis()), successful = true, None)
   }
 
   private def fetch(git: Git, remote: String): FetchResult = {
@@ -55,5 +58,4 @@ trait GitService {
       .findGitDir()
       .build()
   }
-
 }

@@ -1,60 +1,40 @@
 package io.github.gitbucket.mirroring.service
 
-import gitbucket.core.model.Profile.profile.api._
-import gitbucket.core.servlet.Database
-import io.github.gitbucket.mirroring.model.Profile.{MirrorStatuses, Mirrors}
-import io.github.gitbucket.mirroring.model.{Mirror, MirrorStatus, Profile}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.DurationLong
-import scala.concurrent.{Await, Future}
+import gitbucket.core.util.Directory
+import io.github.gitbucket.mirroring.model.Mirror
+import org.h2.mvstore.{MVMap, MVStore}
+import org.json4s.jackson.Serialization
+import org.json4s.{Formats, NoTypeHints}
 
 trait MirrorService {
-  private val db = Database()
 
-  def selectBy(owner: String, repositoryName: String): Query[Profile.Mirrors, Mirror, Seq] = {
-    Mirrors.filter { mirror => mirror.userName === owner.bind && mirror.repositoryName === repositoryName.bind }
-  }
+  private implicit val formats: Formats = Serialization.formats(NoTypeHints)
+  val fileName                          = s"${Directory.GitBucketHome}/kv.mv.db"
+  val mapName                           = "mirrors"
 
-  def deleteMirrorByRepository(owner: String, repositoryName: String): Future[Boolean] = {
-    db.run {
-      selectBy(owner, repositoryName).delete.transactionally.map(_ > 0)
+  def execute[T](f: MVMap[String, String] => T): T = {
+    val store: MVStore = MVStore.open(fileName)
+    try {
+      val mirrors: MVMap[String, String] = store.openMap(mapName)
+      f(mirrors)
+    } finally {
+      store.close()
     }
   }
 
-  def findMirrorByRepository(owner: String, repositoryName: String): Future[Option[Mirror]] = {
-    db.run {
-      selectBy(owner, repositoryName).result.headOption
-    }
+  def findMirror(owner: String, repositoryName: String): Option[Mirror] = execute { mirrors =>
+    read(mirrors.get(makeKey(owner, repositoryName)))
   }
 
-  def findMirrorByRepositoryWithStatus(owner: String, repositoryName: String): Future[Option[(Mirror, Option[MirrorStatus])]] = {
-    db.run {
-      selectBy(owner, repositoryName).joinLeft(MirrorStatuses).on(_.id === _.mirrorId).result.headOption
-    }
+  def deleteMirror(owner: String, repositoryName: String): Option[Mirror] = execute { mirrors =>
+    read(mirrors.remove(makeKey(owner, repositoryName)))
   }
 
-  def insertOrUpdateMirrorUpdate(status: MirrorStatus): Future[MirrorStatus] = {
-    db.run {
-      MirrorStatuses.insertOrUpdate(status).map(_ => status).transactionally
-    }
+  def upsert(mirror: Mirror): Option[Mirror] = execute { mirrors =>
+    read(mirrors.put(makeKey(mirror.userName, mirror.repositoryName), Serialization.write(mirror)))
   }
 
-  def insertMirror(mirror: Mirror): Future[Mirror] = {
-    db.run {
-      val insertQuery = Mirrors returning Mirrors.map(_.id) into ((m, id) => m.copy(id = Some(id)))
-      (insertQuery += mirror).transactionally
-    }
-  }
+  private def makeKey(owner: String, repositoryName: String) = s"$owner-$repositoryName"
 
-  def updateMirror(newMirror: Mirror): Future[Option[Mirror]] = {
-    val maybeId = Await.result(findMirrorByRepository(newMirror.userName, newMirror.repositoryName), 5.seconds).flatMap(_.id)
-    val mirrorWithId = newMirror.copy(id = maybeId)
-    db.run {
-      selectBy(newMirror.userName, newMirror.repositoryName)
-        .update(mirrorWithId)
-        .transactionally
-        .map { rowNumber => if (rowNumber == 0) None else Some(mirrorWithId) }
-    }
-  }
+  private def read(string: String): Option[Mirror] = Option(string).map(Serialization.read[Mirror])
 }

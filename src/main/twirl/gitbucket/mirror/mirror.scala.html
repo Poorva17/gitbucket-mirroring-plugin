@@ -1,5 +1,4 @@
 @(mirror: io.github.gitbucket.mirroring.model.Mirror,
-  statusOption: Option[io.github.gitbucket.mirroring.model.MirrorStatus],
   repository: gitbucket.core.service.RepositoryService.RepositoryInfo
 )(implicit context: gitbucket.core.controller.Context)
 
@@ -30,7 +29,7 @@
       <div class="panel-heading">Status</div>
       <div class="panel-body">
 
-        @statusOption match {
+        @mirror.status match {
           case scala.None => {
             <p class="card-text">This mirror has never been updated.</p>
           }

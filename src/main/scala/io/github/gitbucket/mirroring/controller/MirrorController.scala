@@ -3,25 +3,18 @@ package io.github.gitbucket.mirroring.controller
 import gitbucket.core.controller.ControllerBase
 import gitbucket.core.service.{AccountService, RepositoryService}
 import gitbucket.core.util.OwnerAuthenticator
-import io.github.gitbucket.mirroring.service.{DD, MirrorService}
+import io.github.gitbucket.mirroring.service.MirrorService
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
-
-class MirrorController extends ControllerBase
-  with AccountService
-  with MirrorService
-  with OwnerAuthenticator
-  with RepositoryService {
+class MirrorController
+    extends ControllerBase
+    with AccountService
+    with MirrorService
+    with OwnerAuthenticator
+    with RepositoryService {
 
   get("/:owner/:repository/mirror") {
-    new DD().dd()
     ownerOnly { repository =>
-      val mirrorsWithUpdate = Await.result(
-        findMirrorByRepositoryWithStatus(repository.owner, repository.name),
-        60.seconds
-      )
-      gitbucket.mirror.html.list(mirrorsWithUpdate.toList, repository)
+      gitbucket.mirror.html.list(findMirror(repository.owner, repository.name).toList, repository)
 
     }
   }
@@ -35,11 +28,11 @@ class MirrorController extends ControllerBase
   get("/:owner/:repository/mirror/edit") {
     ownerOnly { repository =>
       (for {
-        owner <- params.getAs[String]("owner")
+        owner          <- params.getAs[String]("owner")
         repositoryName <- params.getAs[String]("repository")
-        (mirror, maybeStatus) <- Await.result(findMirrorByRepositoryWithStatus(owner, repositoryName), 60.seconds)
+        mirror         <- findMirror(owner, repositoryName)
       } yield {
-        gitbucket.mirror.html.mirror(mirror, maybeStatus, repository)
+        gitbucket.mirror.html.mirror(mirror, repository)
       }).getOrElse(NotFound())
     }
   }
