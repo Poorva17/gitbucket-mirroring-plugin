@@ -3,7 +3,7 @@ package io.github.gitbucket.mirroring.controller
 import gitbucket.core.controller.ControllerBase
 import gitbucket.core.service.{AccountService, RepositoryService}
 import gitbucket.core.util.OwnerAuthenticator
-import io.github.gitbucket.mirroring.service.MirrorService
+import io.github.gitbucket.mirroring.service.{DD, MirrorService}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -15,6 +15,7 @@ class MirrorController extends ControllerBase
   with RepositoryService {
 
   get("/:owner/:repository/mirror") {
+    new DD().dd()
     ownerOnly { repository =>
       val mirrorsWithUpdate = Await.result(
         findMirrorByRepositoryWithStatus(repository.owner, repository.name),
