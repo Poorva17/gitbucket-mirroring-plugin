@@ -54,7 +54,7 @@ class MirrorApiController
         owner          <- params.getAs[String]("owner").toRight(NotFound())
         repositoryName <- params.getAs[String]("repository").toRight(NotFound())
         mirror         <- Try(parsedBody.extract[Mirror]).fold[Either[ActionResult, Mirror]](_ => Left(BadRequest()), Right(_))
-        _              <- upsert(mirror.copy(userName = owner, repositoryName = repositoryName)).toRight(NotFound())
+        _              <- upsert(mirror).toRight(NotFound())
       } yield Ok(mirror)
 
       result.merge
