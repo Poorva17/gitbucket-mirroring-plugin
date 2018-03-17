@@ -1,5 +1,5 @@
 @(mirrors: Seq[io.github.gitbucket.mirroring.model.Mirror],
-  repository: gitbucket.core.service.RepositoryService.RepositoryInfo)(implicit context: gitbucket.core.controller.Context)
+        repository: gitbucket.core.service.RepositoryService.RepositoryInfo)(implicit context: gitbucket.core.controller.Context)
 
 @import gitbucket.core.view.helpers
 
@@ -11,12 +11,6 @@
 
     <div id="alert-container"></div>
 
-    @if(true) {
-      <div class="pull-right" style="margin-bottom: 10px;">
-        <a href="@helpers.url(repository)/mirror/new" class="btn btn-success">New mirror</a>
-      </div>
-    }
-
     <table class="table table-bordered table-hover table-mirrors">
       <thead>
         <tr>
@@ -25,43 +19,44 @@
       </thead>
       <tbody>
         @mirrors.map { case mirror =>
-          <tr>
-            <td style="padding-top: 15px; padding-bottom: 15px;">
-              <div class="col-md-6 text-left">
-                <a href="@helpers.url(repository)/mirror/edit">@mirror.name</a>
-              </div>
-              <div class="col-md-3 text-center">
-                <p>
-                  @mirror.status.map(_.date) match {
-                    case Some(date) => {
-                      @helpers.datetimeAgo(date)
-                    }
-                    case None => {}
-                    }
-                </p>
-              </div>
-              <div class="col-md-3 text-right">
-                @mirror.status.map(_.successful) match {
-                  case scala.Some(true) => {
-                    <span class="badge bg-green">Success</span>
-                  }
-                  case scala.Some(false) => {
-                    <span class="badge bg-red">Failure</span>
-                  }
-                  case scala.None => {
-                  }
+        <tr>
+          <td style="padding-top: 15px; padding-bottom: 15px;">
+            <div class="col-md-6 text-left">
+              <a href="@helpers.url(repository)/mirror/edit">@mirror.name</a>
+            </div>
+            <div class="col-md-3 text-center">
+              <p>
+              @mirror.status.map(_.date) match {
+                case Some(date) => {
+                  @helpers.datetimeAgo(date)
                 }
-              </div>
-            </td>
-          </tr>
+                case None => {}
+              }
+              </p>
+            </div>
+            <div class="col-md-3 text-right">
+            @mirror.status.map(_.successful) match {
+              case scala.Some(true) => {
+                <span class="badge bg-green">Success</span>
+              }
+              case scala.Some(false) => {
+                <span class="badge bg-red">Failure</span>
+              }
+              case scala.None => {
+              }
+            }
+        </div>
+        </td>
+        </tr>
         }
 
         <tr @if(mirrors.nonEmpty) { style="display: none" }>
           <td style="padding: 20px; background-color: #eee; text-align: center;">
-            No mirror to show.
-            @if(true) {
-              Click on the "New mirror" button above to create one.
-            }
+          @if(true) {
+            <div class="pull-right" style="margin-bottom: 10px;">
+              <a href="@helpers.url(repository)/mirror/new" class="btn btn-success">New mirror</a>
+            </div>
+          }
           </td>
         </tr>
       </tbody>
@@ -70,21 +65,21 @@
 }
 <script>
 
-  let jsonMessage = sessionStorage.getItem('alertMessage')
+        let jsonMessage = sessionStorage.getItem('alertMessage')
 
-  if (jsonMessage != null) {
+        if (jsonMessage != null) {
 
-    let message = JSON.parse(jsonMessage)
+          let message = JSON.parse(jsonMessage)
 
-    sessionStorage.removeItem('alertMessage');
+          sessionStorage.removeItem('alertMessage');
 
-    $('#alert-container').append(
-      '<div class="alert alert-' + message.type + ' fade in">' +
-        '<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>' +
-        message.content +
-      '</div>'
-    );
+          $('#alert-container').append(
+                  '<div class="alert alert-' + message.type + ' fade in">' +
+                  '<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>' +
+                  message.content +
+                  '</div>'
+          );
 
-  }
+        }
 
 </script>
