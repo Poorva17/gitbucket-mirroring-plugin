@@ -15,6 +15,17 @@
       <thead>
         <tr>
           <th>@mirrors.size mirrors</th>
+          @if(mirrors.isEmpty) {
+            <td style="padding: 20px; background-color: #eee; text-align: center;">
+              <div class="pull-right" style="margin-bottom: 10px;">
+                <a href="@helpers.url(repository)/mirror/new" class="btn btn-success">Configure Mirror</a>
+              </div>
+            </td>
+          } else {
+            <div class="pull-right" style="margin-bottom: 10px;">
+              <a href="@helpers.url(repository)/mirror/edit" class="btn btn-success">Edit Mirror</a>
+            </div>
+          }
         </tr>
       </thead>
       <tbody>
@@ -22,7 +33,7 @@
         <tr>
           <td style="padding-top: 15px; padding-bottom: 15px;">
             <div class="col-md-6 text-left">
-              <a href="@helpers.url(repository)/mirror/edit">@mirror.name</a>
+              <p>@mirror.name</p>
             </div>
             <div class="col-md-3 text-center">
               <p>
@@ -49,16 +60,6 @@
         </td>
         </tr>
         }
-
-        <tr @if(mirrors.nonEmpty) { style="display: none" }>
-          <td style="padding: 20px; background-color: #eee; text-align: center;">
-          @if(true) {
-            <div class="pull-right" style="margin-bottom: 10px;">
-              <a href="@helpers.url(repository)/mirror/new" class="btn btn-success">New mirror</a>
-            </div>
-          }
-          </td>
-        </tr>
       </tbody>
     </table>
   }
