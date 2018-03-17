@@ -1,8 +1,8 @@
-package io.github.gitbucket.mirroring.service
+package csw.tools.mirroring.service
 
+import csw.tools.mirroring.model.Mirror
 import gitbucket.core.service.RepositoryService.RepositoryInfo
 import gitbucket.core.util.Directory
-import io.github.gitbucket.mirroring.model.Mirror
 import org.h2.mvstore.{MVMap, MVStore}
 import org.json4s.jackson.Serialization
 import org.json4s.{Formats, NoTypeHints}

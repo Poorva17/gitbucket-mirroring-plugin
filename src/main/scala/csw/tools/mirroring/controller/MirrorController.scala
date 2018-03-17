@@ -1,9 +1,9 @@
-package io.github.gitbucket.mirroring.controller
+package csw.tools.mirroring.controller
 
+import csw.tools.mirroring.service.MirrorService
 import gitbucket.core.controller.ControllerBase
 import gitbucket.core.service.{AccountService, RepositoryService}
 import gitbucket.core.util.OwnerAuthenticator
-import io.github.gitbucket.mirroring.service.MirrorService
 
 class MirrorController(mirrorService: MirrorService)
     extends ControllerBase

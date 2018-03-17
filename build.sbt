@@ -1,6 +1,6 @@
 name := "gitbucket-mirroring-plugin"
-organization := "io.github.gitbucket"
-version := "1.0.0"
+organization := "org.tmt"
+version := "1.0.0-SNAPSHOT"
 scalaVersion := "2.12.4"
 gitbucketVersion := "4.22.0"
 

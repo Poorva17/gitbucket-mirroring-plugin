@@ -1,20 +1,17 @@
-package io.github.gitbucket.mirroring.service
+package csw.tools.mirroring.service
 
 import java.io.File
 import java.net.URI
 import java.util.Date
 
+import csw.tools.mirroring.model.{Mirror, MirrorStatus}
 import gitbucket.core.service.RepositoryService.RepositoryInfo
 import gitbucket.core.util.Directory
-import io.github.gitbucket.mirroring.model.{Mirror, MirrorStatus}
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.eclipse.jgit.transport.{FetchResult, RefSpec}
 import org.slf4j.LoggerFactory
 
-import scala.collection.JavaConverters._
-import scala.util.Try
 import scala.util.control.NonFatal
 
 class GitService(repoInfo: RepositoryInfo, mirror: Mirror) {

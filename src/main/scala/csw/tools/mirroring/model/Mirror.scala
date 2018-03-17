@@ -1,4 +1,4 @@
-package io.github.gitbucket.mirroring.model
+package csw.tools.mirroring.model
 
 import java.util.Date
 

@@ -1,9 +1,9 @@
+import csw.tools.mirroring.controller.{MirrorApiController, MirrorController}
+import csw.tools.mirroring.service.MirrorService
 import gitbucket.core.controller.Context
 import gitbucket.core.plugin.{Link, PluginRegistry}
 import gitbucket.core.service.RepositoryService.RepositoryInfo
 import gitbucket.core.service.SystemSettingsService
-import io.github.gitbucket.mirroring.controller.{MirrorApiController, MirrorController}
-import io.github.gitbucket.mirroring.service.MirrorService
 import io.github.gitbucket.solidbase.migration.LiquibaseMigration
 import io.github.gitbucket.solidbase.model.Version
 import javax.servlet.ServletContext
