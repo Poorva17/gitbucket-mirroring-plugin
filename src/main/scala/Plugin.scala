@@ -14,7 +14,7 @@ class Plugin extends gitbucket.core.plugin.Plugin {
   override val description: String = "A Gitbucket plugin for pull based repository mirroring"
 
   override val versions: List[Version] = List(
-    new Version("1.0.0", new LiquibaseMigration("update/gitbucket-mirror_1.0.0.xml"))
+    new Version("1.0.0")
   )
 
   override val assetsMappings = Seq("/mirror" -> "/gitbucket/mirror/assets")
