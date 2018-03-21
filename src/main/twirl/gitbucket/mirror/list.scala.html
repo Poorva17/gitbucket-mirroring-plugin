@@ -30,40 +30,99 @@
       </thead>
       <tbody>
         @mirrors.map { case mirror =>
+
         <tr>
           <td style="padding-top: 15px; padding-bottom: 15px;">
-            <div class="col-md-6 text-left">
-              <p>@mirror.name</p>
+            <div>
+              <span class="text-left">Mirror Name</span>
+              <span class="text-center">@mirror.name</span>
             </div>
-            <div class="col-md-3 text-center">
-              <p>
+            <div>
+              <span class="text-left">Remote URL</span>
+              <span class="text-center">@mirror.remoteUrl</span>
+            </div>
+            <div>
+              <span class="text-left">Automatic Updates</span>
+              <span class="text-center">@mirror.enabled</span>
+            </div>
+            <div>
+              <span class="text-left">Last Sync</span>
+              <span class="text-center">
               @mirror.status.map(_.date) match {
                 case Some(date) => {
                   @helpers.datetimeAgo(date)
                 }
                 case None => {}
               }
-              </p>
+              </span>
             </div>
-            <div class="col-md-3 text-right">
-            @mirror.status.map(_.successful) match {
-              case scala.Some(true) => {
-                <span class="badge bg-green">Success</span>
+            <div>
+              <span class="text-left">Last Sync Status</span>
+              <span class="text-center">
+              @mirror.status.map(_.successful) match {
+                case scala.Some(true) => {
+                  <span class="badge bg-green">Success</span>
+                }
+                case scala.Some(false) => {
+                  <span class="badge bg-red">Failure</span>
+                }
+                case scala.None => {
+                }
               }
-              case scala.Some(false) => {
-                <span class="badge bg-red">Failure</span>
+        </span>
+            </div>
+        </td>
+          <td>
+            <div class="panel panel-default">
+              <div class="panel-heading">Status</div>
+              <div class="panel-body">
+
+              @mirror.status match {
+                case scala.None => {
+                  <p class="card-text">This mirror has never been updated.</p>
+                }
+                case scala.Some(status) if status.successful == true => {
+                  <p class="card-text">
+              Mirror successfully updated
+                    <strong class="font-weight-bold">@helpers.datetimeAgo(status.date)</strong>.
+                  </p>
+                }
+                case scala.Some(status) if status.successful == false => {
+                  <p class="card-text">
+              Mirror failed to update
+                    <strong class="font-weight-bold">@helpers.datetimeAgo(status.date)</strong>.
+                  </p>
+
+                  <div class="alert alert-danger" role="alert">
+                    <strong>Error:</strong> @status.error
+                  </div>
+                }
               }
-              case scala.None => {
-              }
-            }
+
+          <button
+          id="update-status"
+          class="btn btn-success"
+          data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>Updating">
+            <i class="fa fa-refresh"></i>
+            Sync Now
+          </button>
+
+        </div>
         </div>
         </td>
         </tr>
+
+
+
         }
+
       </tbody>
+
     </table>
   }
 }
+
+
 <script>
 
         let jsonMessage = sessionStorage.getItem('alertMessage')
@@ -82,5 +141,26 @@
           );
 
         }
+
+        $(function(){
+
+          $('#update-status').click(function() {
+
+            $(this).button('loading');
+
+            $.ajax({
+              url: '@context.path/api/v3/repos/@repository.owner/@repository.name/mirror/status',
+              type: 'PUT',
+              contentType: 'application/json; charset=utf-8',
+              success: function(data, status){
+                location.href = '@helpers.url(repository)/mirror';
+              },
+              error: function(request, status, error) {
+                setAlertMessage('An error happened while executing mirror update.', 'danger');
+                location.href = '@helpers.url(repository)/mirror/edit';
+              }
+            });
+          });
+        });
 
 </script>
