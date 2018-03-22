@@ -11,43 +11,43 @@
 
     <div id="alert-container"></div>
 
-    <table class="table table-bordered table-hover table-mirrors">
-      <thead>
-        <tr>
-          <th>@mirrors.size mirrors</th>
+    <div class="table table-bordered table-hover table-mirrors">
+      <div>
+        <div>
+          <p>@mirrors.size mirrors</p>
           @if(mirrors.isEmpty) {
-            <td style="padding: 20px; background-color: #eee; text-align: center;">
+            <div style="padding: 20px; background-color: #eee; text-align: center;">
               <div class="pull-right" style="margin-bottom: 10px;">
                 <a href="@helpers.url(repository)/mirror/new" class="btn btn-success">Configure Mirror</a>
               </div>
-            </td>
+            </div>
           } else {
             <div class="pull-right" style="margin-bottom: 10px;">
               <a href="@helpers.url(repository)/mirror/edit" class="btn btn-success">Edit Mirror</a>
             </div>
           }
-        </tr>
-      </thead>
-      <tbody>
+        </div>
+      </div>
+      <div>
         @mirrors.map { case mirror =>
 
-        <tr>
-          <td style="padding-top: 15px; padding-bottom: 15px;">
-            <div>
-              <span class="text-left">Mirror Name</span>
-              <span class="text-center">@mirror.name</span>
+        <div>
+          <div style="padding-top: 15px; padding-bottom: 15px; width: 60%">
+            <div style="padding-bottom: 5px;">
+              <strong class="text-left">Mirror Name</strong>
+              <span class="pull-right">@mirror.name</span>
             </div>
-            <div>
-              <span class="text-left">Remote URL</span>
-              <span class="text-center">@mirror.remoteUrl</span>
+            <div style="padding-bottom: 5px;">
+              <strong>Remote URL</strong>
+              <span class="pull-right">@mirror.remoteUrl</span>
             </div>
-            <div>
-              <span class="text-left">Automatic Updates</span>
-              <span class="text-center">@mirror.enabled</span>
+            <div style="padding-bottom: 5px;">
+              <strong>Automatic Updates</strong>
+              <span class="pull-right">@mirror.enabled</span>
             </div>
-            <div>
-              <span class="text-left">Last Sync</span>
-              <span class="text-center">
+            <div style="padding-bottom: 5px;">
+              <strong>Last Sync</strong>
+              <span class="pull-right">
               @mirror.status.map(_.date) match {
                 case Some(date) => {
                   @helpers.datetimeAgo(date)
@@ -56,9 +56,9 @@
               }
               </span>
             </div>
-            <div>
-              <span class="text-left">Last Sync Status</span>
-              <span class="text-center">
+            <div style="padding-bottom: 5px;">
+              <strong>Last Sync Status</strong>
+              <span class="pull-right">
               @mirror.status.map(_.successful) match {
                 case scala.Some(true) => {
                   <span class="badge bg-green">Success</span>
@@ -71,8 +71,8 @@
               }
         </span>
             </div>
-        </td>
-          <td>
+        </div>
+          <div>
             <div class="panel panel-default">
               <div class="panel-heading">Status</div>
               <div class="panel-body">
@@ -109,16 +109,16 @@
 
         </div>
         </div>
-        </td>
-        </tr>
+        </div>
+        </div>
 
 
 
         }
 
-      </tbody>
+      </div>
 
-    </table>
+    </div>
   }
 }
 
@@ -153,7 +153,7 @@
               type: 'PUT',
               contentType: 'application/json; charset=utf-8',
               success: function(data, status){
-                location.href = '@helpers.url(repository)/mirror';
+                location.href = '@helpers.url(repository)/mirror    ';
               },
               error: function(request, status, error) {
                 setAlertMessage('An error happened while executing mirror update.', 'danger');
